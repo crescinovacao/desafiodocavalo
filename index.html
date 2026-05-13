@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desafio do Cavalo ♞</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #210000;          /* vinho Crescimentum */
+  --surface: #ffffff;     /* card branco */
+  --surface2: #f8f5f2;    /* inputs cinza-clarissimo */
+  --accent: #FF5527;      /* laranja Crescimentum */
+  --accent2: #FF5527;
+  --green: #4ecb71;
+  --red: #E6233A;
+  --blue: #FF5527;
+  --text: #210000;        /* texto vinho */
+  --muted: #8a6868;       /* texto secundário vinho claro */
+  --border: rgba(33,0,0,0.15);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background-color: var(--bg);
+  background-image: url('https://i.imgur.com/v5i1SP6.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: 'Aptos', 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh; display: flex;
+  flex-direction: column; align-items: center; justify-content: center; padding: 16px;
+}
+.screen { display:none; width:100%; max-width:480px; flex-direction:column; align-items:center; gap:32px; animation:fadeIn 0.3s ease; }
+.screen.active { display:flex; }
+#gameScreen, #waitingScreen { max-width:520px; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes horsePop { 0%{transform:scale(0.3) rotate(-20deg);opacity:0} 70%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1) rotate(0);opacity:1} }
+@keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-8px);opacity:1} }
+@keyframes flashRed { 0%,100%{border-color:var(--border)} 50%{border-color:var(--red);background:rgba(224,88,88,0.2)} }
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+.logo { font-family:'Raleway',sans-serif; font-size:2rem; color:var(--accent); text-align:center; line-height:1.1; font-weight:700; }
+.logo em { color:var(--accent); font-style:normal; }
+.logo-sub { font-size:0.7rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); font-weight:700; margin-top:4px; text-align:center; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:32px 28px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
+label { display:block; font-size:0.7rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+input, select {
+  width:100%; background:#fff; border:1.5px solid var(--border);
+  border-radius:100px; padding:14px 20px; color:var(--text);
+  font-family:'Aptos','Segoe UI',system-ui,sans-serif; font-size:0.95rem; font-weight:600;
+  outline:none; transition:border-color 0.2s; margin-bottom:14px;
+}
+input:focus, select:focus { border-color:var(--accent); }
+input::placeholder { color:#b8a5a5; font-weight:400; text-transform:uppercase; font-size:0.85rem; letter-spacing:0.5px; }
+select { 
+  cursor:pointer; 
+  appearance:none; -webkit-appearance:none; -moz-appearance:none;
+  background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a6868' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat:no-repeat; background-position:right 18px center; background-size:16px;
+  padding-right:48px;
+}
+select option { background:#fff; color:var(--text); }
+.btn {
+  width:100%; padding:15px 24px; border:none; border-radius:100px;
+  font-family:'Raleway',sans-serif; font-size:1rem; cursor:pointer; font-weight:800;
+  transition:all 0.15s ease; letter-spacing:0.3px;
+}
+.btn:active { transform:translateY(0); }
+.btn-primary { background:var(--bg); color:#fff; }
+.btn-primary:hover { background:var(--accent); color:#fff; }
+.btn-gold { background:var(--accent); color:#fff; }
+.btn-gold:hover { background:var(--bg); color:#fff; }
+.btn-ghost { background:transparent; color:var(--text); border:none; font-size:0.95rem; font-weight:800; }
+.btn-ghost:hover { color:var(--accent); }
+.btn-danger { background:#E6233A; color:#fff; }
+.btn-danger:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
+.btn-outline-danger { background:transparent; color:var(--accent); border:1.5px solid var(--accent); font-weight:800; }
+.btn-outline-danger:hover { background:var(--accent); color:#fff; }
+.btn-green { background:var(--accent); color:#fff; font-weight:800; }
+.btn:disabled {
+  background: #ccc !important;
+  color: #888 !important;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+.btn-green:hover { background:var(--bg); color:#fff; }
+.btn-sm { width:auto; padding:9px 20px; font-size:0.82rem; }
+.or-row { display:flex; align-items:center; gap:12px; color:var(--muted); font-size:0.75rem; font-weight:600; }
+.or-row::before,.or-row::after { content:''; flex:1; height:1px; background:var(--border); }
+.code-display {
+  font-family:'Raleway',sans-serif; font-size:2.8rem; color:var(--accent); font-weight:900;
+  letter-spacing:8px; text-align:center; background:#fff;
+  border-radius:10px; padding:18px; width:100%; border:2px dashed var(--accent);
+}
+.teams-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; width:100%; }
+.team-card { background:#fff; border-radius:10px; overflow:hidden; display:flex; flex-direction:column; }
+.team-card-header { background:var(--accent); color:#fff; padding:14px 16px; font-family:'Raleway',sans-serif; font-weight:800; font-size:1rem; text-align:center; text-transform:uppercase; letter-spacing:1px; }
+.team-card-body { padding:16px; display:flex; flex-direction:column; gap:8px; }
+.team-card.done .team-card-header { background:#8a6868; }
+.t-row { background:#f4f0ed; border-radius:8px; padding:10px 14px; font-size:0.88rem; color:var(--text); font-weight:500; }
+.t-row strong { font-weight:800; }
+.team-card-footer { padding:0 16px 16px 16px; }
+
+/* PLAYING NOW BANNER */
+.playing-now-banner {
+  width:100%; background:#fff; border-radius:10px; padding:12px 16px;
+  display:flex; align-items:center; gap:12px; border:2px solid var(--accent);
+  position:relative; overflow:hidden;
+}
+.playing-now-banner::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg,rgba(255,85,39,0.08),transparent);
+}
+.pnb-dot {
+  width:10px; height:10px; border-radius:50%; flex-shrink:0;
+  animation:livePulse 1.2s ease infinite;
+}
+@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+.pnb-label { font-size:0.68rem; color:var(--accent); font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+.pnb-name { font-weight:800; font-size:1rem; }
+.pnb-turn { font-family:'Raleway',sans-serif; font-size:0.85rem; color:var(--muted); font-weight:600; }
+
+/* NEXT PLAYER */
+.next-player-strip {
+  width:100%; background:#fff; border-radius:10px; padding:10px 14px;
+  display:flex; align-items:center; gap:10px; border:1.5px solid var(--border);
+}
+.np-label { font-size:0.72rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+.np-name { font-weight:800; font-size:0.9rem; color:var(--accent); }
+
+/* BOARD */
+.board-wrap { width:100%; display:flex; justify-content:center; padding:4px 0; }
+.board { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; width:100%; max-width:340px; }
+.cell {
+  aspect-ratio:1; border-radius:10px; background:#fff; border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:1.3rem; font-weight:800; color:var(--text);
+  transition:all 0.12s ease; position:relative;
+  user-select:none; -webkit-user-select:none; flex-direction:column;
+}
+.cell.horse { background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 0 18px rgba(255,85,39,0.5); transform:scale(1.06); }
+.cell.visited {
+  background:rgba(115,57,9,0.12); border-color:transparent;
+  cursor:default; color:rgba(115,57,9,0.6); font-size:1.2rem; font-weight:900;
+}
+.cell.in-path { background:var(--accent); border-color:var(--accent); transform:scale(1.04); }
+.cell.selectable:hover { border-color:var(--accent); background:rgba(255,85,39,0.08); transform:scale(1.04); }
+.cell.readonly { cursor:default !important; }
+.cell.invalid-flash { animation:flashRed 0.4s ease; }
+.path-num { font-size:0.55rem; font-weight:900; color:var(--accent); }
+
+.game-header { display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; flex-wrap:wrap; }
+.pill { background:#fff; border:1.5px solid var(--border); border-radius:100px; padding:7px 16px; font-weight:800; font-size:0.85rem; display:flex; align-items:center; gap:6px; color:var(--text); }
+.pill-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.score-pill { color:var(--accent); font-family:'Raleway',sans-serif; font-size:1rem; }
+.turn-banner { width:100%; background:#fff; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; border:1.5px solid var(--border); }
+.turn-avatar { width:40px; height:40px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-family:'Raleway',sans-serif; font-size:1.1rem; flex-shrink:0; color:#fff; }
+.turn-label { font-size:0.7rem; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+.turn-name { font-weight:800; font-size:0.95rem; }
+.hint { width:100%; background:#fff; border-radius:10px; padding:11px 14px; font-size:0.82rem; color:var(--muted); font-weight:600; text-align:center; line-height:1.6; border:1px solid var(--border); }
+.hint strong { color:var(--text); }
+.step-dots { display:flex; gap:6px; justify-content:center; margin-top:6px; }
+.sdot { width:8px; height:8px; border-radius:50%; background:var(--border); display:inline-block; transition:background 0.2s; }
+.sdot.done { background:var(--accent); }
+.sdot.active { background:var(--accent); transform:scale(1.3); }
+.cancel-hint { font-size:0.72rem; color:var(--muted); font-weight:600; text-align:center; margin-top:2px; }
+
+.waiting-anim { display:flex; gap:6px; justify-content:center; }
+.waiting-anim span { width:8px; height:8px; background:var(--accent); border-radius:50%; animation:bounce 1.2s ease infinite; }
+.waiting-anim span:nth-child(2){animation-delay:0.2s}
+.waiting-anim span:nth-child(3){animation-delay:0.4s}
+
+.result-podium { display:flex; flex-direction:column; gap:10px; width:100%; }
+.podium-item { display:flex; align-items:center; gap:14px; background:#fff; border-radius:10px; padding:14px 18px; border:2px solid var(--border); }
+.podium-item:first-child { border-color:var(--accent); background:rgba(255,85,39,0.05); }
+.podium-rank { font-family:'Raleway',sans-serif; font-size:1.5rem; min-width:36px; text-align:center; }
+.podium-name { font-weight:800; flex:1; font-size:0.95rem; }
+.podium-score { font-family:'Raleway',sans-serif; font-size:1.3rem; color:var(--accent); font-weight:900; }
+.podium-sub { font-size:0.72rem; color:var(--muted); font-weight:700; }
+.ranking-grid {
+  display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+  max-width: 1060px;
+}
+.ranking-grid .team-card { width:200px; flex-shrink:0; border:2px solid var(--accent); }
+.ranking-grid .team-card .t-row { white-space:nowrap; }
+
+/* Modo compacto - quando tiver mais de 5 equipes */
+.ranking-grid.compact .team-card { width:160px; }
+.ranking-grid.compact .team-card-header { padding:8px 10px; font-size:0.85rem; }
+.ranking-grid.compact .team-card-body { padding:10px; gap:5px; }
+.ranking-grid.compact .t-row { padding:6px 10px; font-size:0.75rem; }
+.ranking-popup-card { max-width: 95vw !important; padding: 24px 28px !important; }
+
+/* OVERVIEW DOS MINI-TABULEIROS */
+.overview-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:12px; width:100%;
+}
+.mini-board-card {
+  background:#fff; border:2px solid var(--border); border-radius:10px;
+  padding:12px; display:flex; flex-direction:column; gap:8px;
+  cursor:pointer; transition:transform 0.15s, border-color 0.15s;
+}
+.mini-board-card:hover { transform:translateY(-2px); border-color:var(--accent); }
+.mini-board-card.playing { border-color:var(--accent); box-shadow:0 0 10px rgba(255,85,39,0.2); }
+.mini-board-card.done { opacity:0.7; }
+.mini-card-header {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:0.82rem; font-weight:800;
+}
+.mini-card-name { color:var(--accent); }
+.mini-card-score { color:#210000; font-family:'Raleway',sans-serif; font-size:0.95rem; }
+.mini-board {
+  display:grid; grid-template-columns:repeat(5,1fr); gap:2px;
+  background:var(--border); padding:2px; border-radius:6px;
+}
+.mini-cell {
+  aspect-ratio:1; background:#fff; border-radius:3px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.7rem; font-weight:800; color:var(--text);
+}
+.mini-cell.horse { background:var(--accent); color:#fff; }
+.mini-cell.visited { background:rgba(255,85,39,0.15); color:var(--accent); }
+.mini-cell.in-path { background:rgba(255,85,39,0.3); }
+.mini-card-status {
+  font-size:0.72rem; color:var(--muted); font-weight:700;
+  text-align:center; padding:4px 6px; background:var(--surface2);
+  border-radius:6px;
+}
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--accent); color:#fff; padding:9px 22px; border-radius:100px; font-family:'Aptos','Segoe UI',system-ui,sans-serif; font-weight:800; font-size:0.88rem; z-index:9999; white-space:nowrap; animation:toastIn 0.3s ease; pointer-events:none; }
+.section-label { font-family:'Raleway',sans-serif; font-size:0.78rem; color:var(--accent); align-self:flex-start; letter-spacing:1px; text-transform:uppercase; font-weight:800; }
+.info-text { font-size:0.95rem; color:#210000; opacity:1; font-weight:600; text-align:center; line-height:1.5; margin-top:4px; }
+.session-card { background:#fff; border:1.5px solid var(--border); border-radius:10px; padding:16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.session-info { flex:1; }
+.session-code { font-family:'Raleway',sans-serif; font-size:1.1rem; font-weight:900; color:var(--accent); }
+.session-detail { font-size:0.75rem; color:var(--muted); margin-top:4px; }
+.session-actions { display:flex; gap:6px; }
+.sessions-list { width:100%; max-height:400px; overflow-y:auto; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="homeScreen" class="screen active">
+  <div class="card" style="display:flex;flex-direction:column;gap:0;">
+    <div class="logo" style="margin-bottom:24px;">Desafio <em>do Cavalo</em></div>
+    <label>Código da sessão</label>
+    <input id="joinCode" type="text" placeholder="Ex: CAVALO01" maxlength="12" style="text-transform:uppercase;">
+    <label>Seu nome</label>
+    <input id="joinName" type="text" placeholder="Seu nome" maxlength="30">
+    <label>Sua equipe</label>
+    <select id="joinTeam"><option value="">Selecione...</option></select>
+    <button class="btn btn-primary" onclick="joinGame()" style="margin-top:4px;">Entrar na sessão</button>
+    <div class="or-row" style="margin:14px 0;">ou</div>
+    <button class="btn btn-ghost" onclick="showAdminPassword()">Painel Admin</button>
+  </div>
+</div>
+
+<!-- ADMIN CREATE -->
+<div id="adminScreen" class="screen">
+  <div class="card" style="display:flex;flex-direction:column;gap:0;">
+    <div class="logo" style="margin-bottom:24px;">Criar <em>sessão</em></div>
+    <label>Código da sessão</label>
+    <input id="adminCode" type="text" placeholder="Ex: CAVALO01" maxlength="12" style="text-transform:uppercase;">
+    <label>Número de equipes</label>
+    <select id="numTeams">
+      <option value="1">1 equipe</option>
+      <option value="2" selected>2 equipes</option>
+      <option value="3">3 equipes</option>
+      <option value="4">4 equipes</option>
+      <option value="5">5 equipes</option>
+      <option value="6">6 equipes</option>
+      <option value="7">7 equipes</option>
+      <option value="8">8 equipes</option>
+      <option value="9">9 equipes</option>
+      <option value="10">10 equipes</option>
+    </select>
+    <label>Máximo de pessoas por equipe</label>
+    <select id="maxPlayers">
+      <option value="3">até 3 pessoas</option>
+      <option value="5" selected>até 5 pessoas</option>
+      <option value="8">até 8 pessoas</option>
+      <option value="10">até 10 pessoas</option>
+      <option value="99">sem limite</option>
+    </select>
+    <button class="btn btn-primary" onclick="createSession()" style="margin-top:4px;">Criar sessão</button>
+    <div class="or-row" style="margin:14px 0;">ou</div>
+    <button class="btn btn-ghost" onclick="showScreen('manageSessions')">Voltar</button>
+  </div>
+</div>
+
+<!-- ADMIN MANAGE SESSIONS -->
+<div id="manageSessions" class="screen">
+  <div class="card" style="display:flex;flex-direction:column;gap:0;">
+    <div class="logo" style="margin-bottom:24px;">Sessões <em>Ativas</em></div>
+    <div class="sessions-list" id="sessionsList" style="margin-bottom:18px;">
+      <div style="text-align:center;color:var(--muted);padding:20px;">Carregando...</div>
+    </div>
+    <button class="btn btn-primary" onclick="showScreen('adminScreen')">Criar nova sessão</button>
+    <div class="or-row" style="margin:14px 0;">ou</div>
+    <button class="btn btn-ghost" onclick="showScreen('homeScreen')">Voltar</button>
+  </div>
+</div>
+
+<!-- ADMIN LOBBY -->
+<div id="lobbyScreen" class="screen" style="max-width:700px; gap: 12px;">
+  <div class="card" style="margin-bottom: 0; padding: 14px 20px;">
+    <div class="logo" style="font-size: 1.35rem; margin-bottom: 10px;">Sessão ativa</div>
+    <div style="display:flex; justify-content: center;">
+      <div id="displayCode" style="font-family:'Raleway',sans-serif; font-size:1.45rem; color:var(--accent); font-weight:900; letter-spacing:4px; border:1.5px dashed var(--accent); border-radius:8px; padding:6px 20px;">—</div>
+    </div>
+    <div class="info-text" style="margin-top:8px;">Compartilhe este código com pessoas participantes!</div>
+  </div>
+
+  <div class="card" style="margin-bottom: 12px; padding: 14px 20px;">
+    <div class="logo" style="font-size: 1.35rem; margin-bottom: 22px;">Controle de dinâmica</div>
+    <div style="display:flex; gap:8px; flex-wrap: nowrap; justify-content: center;">
+        <button id="btnPhasePractice" class="btn btn-primary btn-sm" style="flex:1; padding: 10px 12px;" onclick="setPhase('practice')">Iniciar teste</button>
+        <button id="btnPhaseRound1" class="btn btn-primary btn-sm" style="flex:1; padding: 10px 12px;" onclick="setPhase('round1')">Rodada 1</button>
+        <button id="btnPhaseRound2" class="btn btn-primary btn-sm" style="flex:1; padding: 10px 12px;" onclick="setPhase('round2')">Rodada 2</button>
+        <button class="btn btn-primary btn-sm" id="btnResult" style="flex:1; padding: 10px 12px;" onclick="publishResults()">Ranking</button>
+    </div>
+  </div>
+
+  <div style="background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; display: flex; width: 100%; gap: 4px; margin-bottom: 4px;">
+    <button id="tabPlacar" class="btn btn-primary" style="flex:1; border-radius: 8px; padding: 8px; font-size: 0.85rem; background: var(--surface); color: var(--text);" onclick="switchTab('placar')">Placar</button>
+    <button id="tabTabuleiros" class="btn btn-ghost" style="flex:1; border-radius: 8px; padding: 8px; font-size: 0.85rem; color: #fff;" onclick="switchTab('tabuleiros')">Tabuleiros</button>
+  </div>
+
+  <div id="tabContentPlacar" style="width:100%;">
+    <div id="teamsGrid" class="teams-grid"></div>
+  </div>
+
+  <div id="tabContentTabuleiros" style="display:none;width:100%;">
+    <div id="overviewGrid" class="overview-grid"></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px;width:100%;">
+    <button class="btn btn-danger" onclick="clearSession()">Encerrar e limpar dados</button>
+  </div>
+</div>
+
+<!-- EXPAND MODAL -->
+<div class="expand-overlay" id="expandOverlay" onclick="closeExpand(event)" style="display:none;">
+  <div class="expand-box">
+    <div class="expand-nav">
+      <button onclick="navigateExpand(-1)">Anterior</button>
+      <div class="expand-title" id="expandTitle">Equipe A</div>
+      <button onclick="navigateExpand(1)">Próxima</button>
+    </div>
+    <div class="expand-board" id="expandBoard"></div>
+    <div class="expand-info">
+      <div class="pill score-pill"><span id="expandLs">0</span> Ls</div>
+      <div class="pill" id="expandStatus" style="color:var(--muted);font-size:0.82rem;"></div>
+    </div>
+    <button class="btn btn-ghost" style="font-size:0.82rem;padding:8px;" onclick="closeExpand()">Fechar</button>
+  </div>
+</div>
+
+<!-- WAITING / SPECTATOR -->
+<div id="waitingScreen" class="screen">
+
+  <!-- Pre-game: equipe ainda não começou -->
+  <div id="preGameWait" style="display:flex;flex-direction:column;align-items:center;gap:18px;width:100%;max-width:520px;">
+    <div class="card" style="display:flex;flex-direction:column;gap:18px;text-align:center;align-items:center;">
+      <div id="waitEmoji" style="font-size:3.5rem;">⏳</div>
+      <div class="logo" id="waitingMsg" style="font-size:2rem;line-height:1.2;">Aguardando <em>início...</em></div>
+      <div class="info-text" id="waitingDetail" style="margin-top:-8px;">O(a) consultor(a) irá iniciar o jogo em breve.</div>
+      <div class="waiting-anim" id="waitingAnimDiv"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- Spectator: jogo rolando — vê o tabuleiro ao vivo -->
+  <div id="spectatorView" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:520px;">
+
+    <!-- quem está jogando agora -->
+    <div class="playing-now-banner">
+      <div class="pnb-dot" id="pnbDot" style="background:#FF5527;"></div>
+      <div style="flex:1;">
+        <div class="pnb-label">✦ Jogando agora</div>
+        <div class="pnb-name" id="pnbName">—</div>
+      </div>
+      <div class="pnb-turn" id="pnbTurnCount"></div>
+    </div>
+
+    <!-- tabuleiro ao vivo (read-only) -->
+    <div class="board-wrap"><div class="board" id="spectatorBoard"></div></div>
+
+    <!-- score + quem joga depois -->
+    <div style="display:flex;gap:10px;width:100%;flex-wrap:wrap;justify-content:center;">
+      <div class="pill score-pill"><span id="specScore">0</span> Ls</div>
+      <div class="pill" id="nextPill" style="color:var(--muted);font-size:0.82rem;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- YOUR TURN -->
+<div id="yourTurnScreen" class="screen">
+  <div class="card" style="display:flex;flex-direction:column;gap:18px;text-align:center;align-items:center;">
+    <div style="font-size:3.5rem;animation:horsePop 0.6s ease;">🐴</div>
+    <div class="logo" style="font-size:2rem;line-height:1.2;">É a sua <em>vez!</em></div>
+    <div class="info-text" id="yourTurnSub" style="margin-top:-8px;"></div>
+    <button class="btn btn-primary" onclick="goToBoard()" style="margin-top:8px;">Jogar agora</button>
+  </div>
+</div>
+
+<!-- GAME (interactive board) -->
+<div id="gameScreen" class="screen">
+  <div class="card" style="display:flex;flex-direction:column;gap:14px;align-items:center;width:100%;">
+    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+      <div style="font-family:'Raleway',sans-serif;font-weight:800;color:var(--accent);font-size:1.1rem;" id="gteam">Equipe A</div>
+      <div style="font-family:'Raleway',sans-serif;font-weight:900;color:var(--text);font-size:1.1rem;"><span id="gscore">0</span> casas</div>
+    </div>
+    <div style="width:100%;background:var(--surface2);border-radius:10px;padding:12px 16px;text-align:center;font-weight:700;color:var(--text);" id="turnStatus">
+      É a sua vez de jogar!
+    </div>
+    <div class="board-wrap" style="background:var(--surface2);border-radius:10px;padding:14px;width:100%;"><div class="board" id="board"></div></div>
+    <div class="cancel-hint" id="cancelHint"></div>
+  </div>
+  <!-- Elementos ocultos para compatibilidade com código antigo -->
+  <div style="display:none;">
+    <div id="gdot"></div>
+    <div id="turnAvatar"></div>
+    <div id="turnName"></div>
+    <div id="turnCount"></div>
+    <div id="hint"><div id="hintText"></div><div id="stepDots"></div></div>
+    <div id="gameInfo"></div>
+  </div>
+</div>
+
+<!-- TEST START POPUP -->
+<div id="testStartPopup" class="screen">
+  <div class="card" style="display:flex;flex-direction:column;gap:18px;text-align:center;align-items:center;">
+    <div style="font-size:3.5rem;animation:horsePop 0.6s ease;">⏱️</div>
+    <div class="logo" style="font-size:2rem;line-height:1.2;">Tempo para <em>teste iniciado!</em></div>
+    <div class="info-text" style="margin-top:-8px;">Esse é o momento de testarem e criarem a estratégia.<br><strong>Boa sorte!</strong></div>
+    <button class="btn btn-primary" onclick="closeTestStartPopup()" style="margin-top:8px;width:100%;">Entendido</button>
+  </div>
+</div>
+
+<!-- ROUND 1 START POPUP -->
+<div id="round1StartPopup" class="screen">
+  <div class="card" style="display:flex;flex-direction:column;gap:18px;text-align:center;align-items:center;">
+    <div style="font-size:3.5rem;animation:horsePop 0.6s ease;">🚀</div>
+    <div class="logo" style="font-size:2rem;line-height:1.2;">Rodada <em>iniciada!</em></div>
+    <div class="info-text" style="margin-top:-8px;">Esse é o momento de colocar a estratégia em ação.<br><strong>Boa sorte!</strong></div>
+    <button class="btn btn-primary" onclick="closeRound1Popup()" style="margin-top:8px;width:100%;">Entendido</button>
+  </div>
+</div>
+
+<!-- RANKING POPUP -->
+<div id="rankingPopup" class="screen" style="max-width:none;">
+  <div class="card ranking-popup-card" style="display:flex;flex-direction:column;gap:18px;text-align:center;align-items:center;width:fit-content;">
+    <div class="logo" style="font-size:2rem;line-height:1.2;">🏆 Ranking <em>Final</em></div>
+    <div id="rankingPodium" class="ranking-grid"></div>
+    <button class="btn btn-primary" onclick="closeRankingPopup()" style="margin-top:8px;max-width:300px;width:100%;">Fechar</button>
+  </div>
+</div>
+
+<!-- DONE -->
+<div id="doneScreen" class="screen">
+  <div class="card" style="display:flex;flex-direction:column;gap:18px;text-align:center;align-items:center;">
+    <div id="doneEmoji" style="font-size:3.5rem;">✅</div>
+    <div class="logo" id="doneMsg" style="font-size:2rem;line-height:1.2;">Passou a <em>vez!</em></div>
+    <div class="info-text" id="doneDetail" style="margin-top:-8px;">Aguarde a vez da próxima pessoa.</div>
+    <div class="waiting-anim"><span></span><span></span><span></span></div>
+  </div>
+  <div class="playing-now-banner" id="donePlayingBanner" style="display:none;width:100%;">
+    <div class="pnb-dot" style="background:var(--accent);animation:livePulse 1.2s ease infinite;"></div>
+    <div><div class="pnb-label">✦ Jogando agora</div><div class="pnb-name" id="donePlayingName">—</div></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="resultScreen" class="screen" style="max-width:none;">
+  <div class="card ranking-popup-card" style="display:flex;flex-direction:column;gap:18px;text-align:center;align-items:center;width:fit-content;">
+    <div class="logo" style="font-size:2rem;line-height:1.2;">🏆 Ranking <em>Final</em></div>
+    <div id="resultPodium" class="ranking-grid"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, off, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB7O-0pxrb_hGKHigkQNdC851fysxl5Z_8",
+  authDomain: "teste-jogo-crescimentum.firebaseapp.com",
+  databaseURL: "https://teste-jogo-crescimentum-default-rtdb.firebaseio.com",
+  projectId: "teste-jogo-crescimentum",
+  storageBucket: "teste-jogo-crescimentum.firebasestorage.app",
+  messagingSenderId: "506040174576",
+  appId: "1:506040174576:web:8dc39cb8243c9947207f35"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ─── STATE ────────────────────────────────────────────────
+let sessionCode='', myTeam='', myName='', isAdmin=false, gameState=null, unsubscribe=null;
+let boardVisited=[], horsePos=-1, pathClicks=[];
+let iAmPlaying=false; // true while I'm on the game screen making a move
+const COLORS=['#FF5527','#FF5527','#7c3aed','#c084fc','#9333ea','#e879f9','#FF5527','#7c3aed','#c084fc','#9333ea'];
+
+// ─── UTILS ────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+
+function toast(msg, color='#e8703a') {
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div');
+  t.className='toast'; t.textContent=msg; t.style.background=color;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+function rc(i){ return {r:Math.floor(i/5), c:i%5}; }
+
+// ─── L-PATH VALIDATION ────────────────────────────────────
+// Path = 4 cells. Valid if:
+//   1. All distinct
+//   2. Each consecutive pair is orthogonally adjacent (no diagonal jumps)
+//   3. Start → end is a valid knight jump (±1,±2 or ±2,±1)
+function isValidL(path) {
+  if (path.length !== 4) return false;
+  if (new Set(path).size !== 4) return false;
+  // Cada clique deve ser vizinho ao anterior (Manhattan distance = 1)
+  for (let i = 0; i < 3; i++) {
+    const a = rc(path[i]), b = rc(path[i+1]);
+    if (Math.abs(a.r - b.r) + Math.abs(a.c - b.c) !== 1) return false;
+  }
+  
+  // Um L válido: 3 passos em UMA direção + 1 passo perpendicular
+  const {r:r0, c:c0} = rc(path[0]);
+  const {r:r1, c:c1} = rc(path[1]);
+  const {r:r2, c:c2} = rc(path[2]);
+  const {r:r3, c:c3} = rc(path[3]);
+  
+  // Checar todas as combinações possíveis de 3+1:
+  // 1) Primeiros 3 horizontal, 4º vertical
+  if (r0 === r1 && r1 === r2 && r2 !== r3 && c3 === c2) return true;
+  // 2) Primeiros 3 vertical, 4º horizontal
+  if (c0 === c1 && c1 === c2 && c2 !== c3 && r3 === r2) return true;
+  // 3) Primeiro horizontal, próximos 2-3 vertical, último horizontal
+  if (r0 === r1 && c1 === c2 && c2 === c3 && r3 !== r2) return true;
+  // 4) Primeira vertical, próximas 2-3 horizontal, última vertical
+  if (c0 === c1 && r1 === r2 && r2 === r3 && c3 !== c2) return true;
+  
+  return false;
+}
+
+// ─── ADMIN ────────────────────────────────────────────────
+function showAdminPassword(){
+  const pw = prompt('Digite a senha do admin:');
+  if(!pw) return;
+  if(pw === 'cresci2026') {
+    loadActiveSessions();
+  } else {
+    toast('Senha incorreta!', '#e05858');
+  }
+}
+
+
+function checkAdminPass(){
+  showAdminPassword();
+}
+
+
+window.showManageSessions = async function(){
+  console.log('Mostrando tela de gerenciamento');
+  showScreen('manageSessions');
+  console.log('Tela mostrada, carregando sessões...');
+  try {
+    await loadActiveSessions();
+  } catch(err) {
+    console.error('Erro ao carregar sessões:', err);
+  }
+};
+
+async function loadActiveSessions(){
+  showScreen('manageSessions');
+  try {
+    const snap = await get(ref(db, 'cavalo'));
+    const list = document.getElementById('sessionsList');
+    
+    if (!snap.exists() || Object.keys(snap.val()).length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">Nenhuma sessão ativa</div>';
+      return;
+    }
+    
+    const sessions = snap.val();
+    list.innerHTML = '';
+    
+    Object.entries(sessions).forEach(([code, data]) => {
+      const teamCount = Object.keys(data.teams || {}).length;
+      const playerCount = Object.values(data.teams || {}).reduce((sum, t) => sum + (t.players || []).length, 0);
+      const createdAt = new Date(data.createdAt || 0);
+      const now = new Date();
+      const diffMin = Math.floor((now - createdAt) / 60000);
+      
+      const item = document.createElement('div');
+      item.className = 'session-card';
+      item.innerHTML = `
+        <div class="session-info">
+          <div class="session-code">${code}</div>
+          <div class="session-detail">${teamCount} equipes · ${playerCount} pessoas · há ${diffMin}min</div>
+        </div>
+        <div class="session-actions">
+          <button class="btn btn-outline-danger btn-sm" onclick="deleteSession('${code}')">Encerrar</button>
+          <button class="btn btn-primary btn-sm" onclick="enterSession('${code}')">Entrar</button>
+        </div>
+      `;
+      list.appendChild(item);
+    });
+  } catch (err) {
+    console.error('Erro ao carregar sessões:', err);
+    document.getElementById('sessionsList').innerHTML = '<div style="color:#e05858;">Erro ao carregar</div>';
+  }
+}
+
+
+async function enterSession(code){
+  sessionCode = code;
+  isAdmin = true;
+  const snap = await get(ref(db, `cavalo/${code}`));
+  if (!snap.exists()) {
+    toast('Sessão não encontrada!', '#e05858');
+    return;
+  }
+  sessionStorage.setItem('cavalo_admin', JSON.stringify({code}));
+  document.getElementById('displayCode').textContent = code;
+  listenSession();
+  showScreen('lobbyScreen');
+  toast('Entrando na sessão...', '#4ecb71');
+}
+
+
+async function deleteSession(code){
+  if (!confirm(`Deletar sessão ${code}?`)) return;
+  try {
+    await remove(ref(db, `cavalo/${code}`));
+    toast('Sessão deletada', '#4ecb71');
+    await loadActiveSessions();
+  } catch (err) {
+    toast('Erro ao deletar', '#e05858');
+  }
+}
+
+
+
+async function createSession(){
+  const code=document.getElementById('adminCode').value.trim().toUpperCase();
+  const nT=parseInt(document.getElementById('numTeams').value);
+  const maxP=parseInt(document.getElementById('maxPlayers').value);
+  if (!code){ toast('Digite um código!','#e05858'); return; }
+  const teams={};
+  for(let i=0;i<nT;i++){
+    const name='Equipe '+String.fromCharCode(65+i);
+    teams[name]={ color:COLORS[i], score:0, lCount:0, status:'waiting', turnIdx:0, maxPlayers:maxP, players:[], board:Array(25).fill(false), horsePos:-1 };
+  }
+  await set(ref(db,`cavalo/${code}`),{status:'active',teams,createdAt:Date.now()});
+  sessionCode=code; isAdmin=true;
+  sessionStorage.setItem('cavalo_admin',JSON.stringify({code}));
+  document.getElementById('displayCode').textContent=code;
+  listenSession();
+  showScreen('lobbyScreen');
+  toast('Sessão criada! ♞','#4ecb71');
+}
+
+
+// ─── TABS ─────────────────────────────────────────────────
+let currentTab = 'placar';
+function switchTab(tab){
+  currentTab = tab;
+  document.getElementById('tabContentPlacar').style.display = tab==='placar' ? 'block' : 'none';
+  document.getElementById('tabContentTabuleiros').style.display = tab==='tabuleiros' ? 'block' : 'none';
+  
+  const tP = document.getElementById('tabPlacar');
+  const tT = document.getElementById('tabTabuleiros');
+  
+  if(tab === 'placar') {
+    tP.style.background = 'var(--surface)'; tP.style.color = 'var(--text)';
+    tT.style.background = 'transparent'; tT.style.color = '#fff';
+  } else {
+    tT.style.background = 'var(--surface)'; tT.style.color = 'var(--text)';
+    tP.style.background = 'transparent'; tP.style.color = '#fff';
+  }
+  
+  if(tab==='tabuleiros' && gameState) updateOverview(gameState);
+}
+
+
+// ─── OVERVIEW GRID ────────────────────────────────────────
+function updateOverview(data){
+  const grid = document.getElementById('overviewGrid');
+  if(!grid) return;
+  grid.innerHTML='';
+  Object.entries(data.teams).forEach(([name,t],i)=>{
+    const card = document.createElement('div');
+    const statusClass = t.status==='done'?'done':t.status==='playing'?'playing':'';
+    card.className = `mini-board-card ${statusClass}`;
+    card.onclick = () => openExpand(name, Object.keys(data.teams).indexOf(name));
+
+    const players = t.players||[];
+    const rawIdx = t.turnIdx||0;
+    const turnIdx = players.length>0 ? rawIdx%players.length : 0;
+    const currentPlayer = players[turnIdx]||'—';
+    const lCount = t.lCount||0;
+    const statusMap = {waiting:'Aguardando',playing:`${currentPlayer} está jogando`,done: t.blocked?'Finalizado':'Concluído'};
+
+    const casasMini=(t.board||[]).filter(Boolean).length;
+    card.innerHTML = `
+      <div class="mini-card-header">
+        <div class="mini-card-name">${name}</div>
+        <div class="mini-card-score">${casasMini} casas</div>
+      </div>
+      <div class="mini-board" id="miniBoard-${i}"></div>
+      <div class="mini-card-status">${statusMap[t.status]||'—'}</div>
+    `;
+    grid.appendChild(card);
+
+    // Build mini board
+    const board = t.board||Array(25).fill(false);
+    const hPos = t.horsePos??-1;
+    const path = t.currentPath||[];
+    const miniB = card.querySelector(`#miniBoard-${i}`);
+    for(let j=0;j<25;j++){
+      const c=document.createElement('div');
+      c.className='mini-cell';
+      if(j===hPos){ c.classList.add('horse'); c.textContent='♞'; }
+      else if(path.includes(j)){ c.classList.add('in-path'); }
+      else if(board[j]){ c.classList.add('visited'); c.textContent='✕'; }
+      miniB.appendChild(c);
+    }
+  });
+}
+
+// ─── EXPAND MODAL ─────────────────────────────────────────
+let expandTeamNames = [];
+let expandCurrentIdx = 0;
+
+
+
+function navigateExpand(dir){
+  expandCurrentIdx = (expandCurrentIdx + dir + expandTeamNames.length) % expandTeamNames.length;
+  renderExpand();
+};
+
+function renderExpand(){
+  const name = expandTeamNames[expandCurrentIdx];
+  const t = gameState.teams[name];
+  if(!t) return;
+  const i = expandCurrentIdx;
+
+  document.getElementById('expandTitle').textContent = name;
+  document.getElementById('expandLs').textContent = t.lCount||0;
+
+  const players = t.players||[];
+  const rawIdx = t.turnIdx||0;
+  const turnIdx = players.length>0 ? rawIdx%players.length : 0;
+  const currentPlayer = players[turnIdx]||'—';
+  const statusEl = document.getElementById('expandStatus');
+  if(t.status==='playing'){ statusEl.textContent=`▶ ${currentPlayer} jogando`; statusEl.style.color='#FF5527'; }
+  else if(t.status==='done'){ statusEl.textContent=t.blocked?'😞 Bloqueado':'✅ Concluído'; statusEl.style.color='#FF5527'; }
+  else { statusEl.textContent='⏳ Aguardando'; statusEl.style.color='#b89dd4'; }
+
+  const board = t.board||Array(25).fill(false);
+  const hPos = t.horsePos??-1;
+  const path = t.currentPath||[];
+  const expandB = document.getElementById('expandBoard');
+  expandB.innerHTML='';
+  for(let j=0;j<25;j++){
+    const c=document.createElement('div');
+    c.className='expand-cell';
+    if(j===hPos){ c.classList.add('horse'); c.textContent='♞'; }
+    else if(path.includes(j)){ c.classList.add('in-path'); }
+    else if(board[j]){ c.classList.add('visited'); c.textContent='✕'; }
+    expandB.appendChild(c);
+  }
+}
+
+function closeExpand(e){
+  if(e && e.target !== document.getElementById('expandOverlay')) return;
+  const el = document.getElementById('expandOverlay');
+  el.classList.remove('active');
+  el.style.display='none';
+};
+// Also fix openExpand to set display:flex
+const _origOpenExpand = window.openExpand;
+window.openExpand = function(teamName, idx){
+  document.getElementById('expandOverlay').style.display='flex';
+  if(!gameState) return;
+  expandTeamNames = Object.keys(gameState.teams);
+  expandCurrentIdx = idx >= 0 ? idx : expandTeamNames.indexOf(teamName);
+  renderExpand();
+  document.getElementById('expandOverlay').classList.add('active');
+};
+
+async function startTeam(name){
+  await update(ref(db,`cavalo/${sessionCode}/teams/${name}`),{
+    status:'playing',
+    turnIdx:0,
+    startTime: Date.now()
+  });
+  toast(`${name} começando!`);
+};
+
+async function setPhase(phase) {
+  const msgs = {
+    'practice': 'Teste',
+    'round1': 'Rodada 1',
+    'round2': 'Rodada 2'
+  };
+
+  if(!confirm(`Deseja iniciar a ${msgs[phase]}? Isso reiniciará o tabuleiro de todas as equipes.`)) return;
+
+  const snap = await get(ref(db, `cavalo/${sessionCode}/teams`));
+  if(!snap.exists()) return;
+  const teams = snap.val();
+
+  const updates = { phase: phase, status: 'active' };
+
+  Object.keys(teams).forEach(teamName => {
+    const t = teams[teamName];
+    if (phase === 'round2') {
+       updates[`teams/${teamName}/history_round1`] = {
+         lCount: t.lCount || 0,
+         time: (t.endTime && t.startTime) ? (t.endTime - t.startTime) : 0
+       };
+    }
+    updates[`teams/${teamName}/status`] = 'playing';
+    updates[`teams/${teamName}/turnIdx`] = 0;
+    updates[`teams/${teamName}/board`] = Array(25).fill(false);
+    updates[`teams/${teamName}/horsePos`] = -1;
+    updates[`teams/${teamName}/currentPath`] = [];
+    updates[`teams/${teamName}/lCount`] = 0;
+    updates[`teams/${teamName}/blocked`] = false;
+    updates[`teams/${teamName}/fullBoard`] = false;
+    updates[`teams/${teamName}/startTime`] = Date.now();
+    updates[`teams/${teamName}/endTime`] = null;
+  });
+
+  await update(ref(db, `cavalo/${sessionCode}`), updates);
+  toast(msgs[phase], '#4ecb71');
+}
+
+async function publishResults(){
+  await update(ref(db,`cavalo/${sessionCode}`),{status:'ranking'});
+  showScreen('rankingPopup');
+};
+
+async function closeRanking(){
+  await update(ref(db,`cavalo/${sessionCode}`),{status:'active'});
+};
+
+async function clearSession(){
+  if(!confirm('Encerrar e apagar todos os dados?')) return;
+  await remove(ref(db,`cavalo/${sessionCode}`));
+  sessionStorage.removeItem('cavalo_admin');
+  if(unsubscribe) unsubscribe();
+  showScreen('homeScreen');
+  toast('Sessão encerrada','#4ecb71');
+};
+
+// ─── JOIN ─────────────────────────────────────────────────
+async function joinGame(){
+  const code=document.getElementById('joinCode').value.trim().toUpperCase();
+  const name=document.getElementById('joinName').value.trim();
+  const team=document.getElementById('joinTeam').value;
+  if(!code||!name||!team){ toast('Preencha tudo!','#e05858'); return; }
+  const snap=await get(ref(db,`cavalo/${code}`));
+  if(!snap.exists()){ toast('Sessão não encontrada!','#e05858'); return; }
+  const data=snap.val();
+  if(!data.teams[team]){ toast('Equipe inválida!','#e05858'); return; }
+  const teamData=data.teams[team];
+  const players=teamData.players||[];
+  const maxP=teamData.maxPlayers||99;
+  if(!players.includes(name)){
+    if(players.length>=maxP){ toast(`Equipe cheia! Máximo de ${maxP} pessoas.`,'#e05858'); return; }
+    players.push(name);
+    await update(ref(db,`cavalo/${code}/teams/${team}`),{players});
+  }
+  sessionCode=code; myTeam=team; myName=name; isAdmin=false;
+  sessionStorage.setItem('cavalo_player',JSON.stringify({code,team,name}));
+  listenSession();
+};
+
+// ─── LISTEN ───────────────────────────────────────────────
+function listenSession(){
+  if(unsubscribe) unsubscribe();
+  const r=ref(db,`cavalo/${sessionCode}`);
+  const fn=onValue(r,snap=>{
+    if(!snap.exists()){
+      sessionStorage.removeItem('cavalo_player');
+      sessionStorage.removeItem('cavalo_admin');
+      iAmPlaying=false;
+      toast('Sessão encerrada pelo facilitador.','#FF5527');
+      setTimeout(()=>showScreen('homeScreen'), 1200);
+      return;
+    }
+    gameState=snap.val();
+    
+    // Controle global da tela de ranking
+    if(gameState.status === 'ranking') {
+      iAmPlaying = false;
+      renderResults(gameState);
+      if(isAdmin){
+        renderRankingPopup(gameState);
+        showScreen('rankingPopup');
+      } else {
+        showScreen('resultScreen');
+      }
+      const btnClose = document.getElementById('btnCloseRanking');
+      if(btnClose) btnClose.style.display = isAdmin ? 'block' : 'none';
+      return;
+    } else if (document.getElementById('resultScreen').classList.contains('active')) {
+      // Se o ranking foi fechado, devolve o admin pro painel
+      if (isAdmin) showScreen('lobbyScreen');
+    }
+
+    if(isAdmin) updateLobby(gameState);
+    else handlePlayer(gameState);
+  });
+  unsubscribe=()=>off(r,fn);
+}
+
+// ─── LOBBY ────────────────────────────────────────────────
+function formatTime(ms){
+  if(!ms || ms<0) return '0min 0s';
+  const mins = Math.floor(ms/60000);
+  const secs = Math.floor((ms%60000)/1000);
+  return `${mins}min ${secs}s`;
+}
+
+function updateLobby(data){
+  const grid=document.getElementById('teamsGrid');
+  grid.innerHTML='';
+  let allDone=true;
+  Object.entries(data.teams).forEach(([name,t],i)=>{
+    if(t.status!=='done') allDone=false;
+    const lCount=t.lCount||0;
+    const players=t.players||[];
+    const blocked = t.blocked && t.status==='done';
+    const statusMap={waiting:'Aguardando',playing:'Jogando',done: blocked ? 'Finalizado' : 'Finalizado'};
+    
+    let tempo = '0min 0s'; // Inicia com zero em vez de traço
+    if (t.startTime) {
+      const end = t.endTime || Date.now();
+      tempo = formatTime(end - t.startTime);
+    }
+    
+    let comparativoR1 = '';
+    if (t.history_round1) {
+      const h = t.history_round1;
+      comparativoR1 = `<div class="t-row" style="font-size:0.75rem; color:var(--muted); border-top:1px dashed var(--border); margin-top:4px; padding-top:4px;">
+        Rodada 1: ${h.lCount} Ls em ${formatTime(h.time)}
+      </div>`;
+    }
+    
+    const peopleText = `${players.length}${t.maxPlayers&&t.maxPlayers<99?'/'+t.maxPlayers:''}`;
+    
+    const card=document.createElement('div');
+    card.className='team-card'+(t.status==='done'?' done':t.status==='playing'?' playing':'');
+    card.innerHTML=`
+      <div class="team-card-header">${name}</div>
+      <div class="team-card-body">
+        <div class="t-row"><strong>Pessoas na sala:</strong> ${peopleText}</div>
+        <div class="t-row"><strong>Status:</strong> ${statusMap[t.status]}</div>
+        <div class="t-row"><strong>Ls feitos:</strong> ${lCount}</div>
+        <div class="t-row"><strong>Tempo:</strong> ${tempo}</div>
+        ${comparativoR1}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Ranking agora fica sempre visível na linha de 4 botões
+  
+  // Lógica do botão de Teste (Iniciar/Parar)
+  const isPractice = data.phase === 'practice';
+  const anyPlaying = Object.values(data.teams).some(team => team.status === 'playing');
+  const btnPractice = document.getElementById('btnPhasePractice');
+  
+  if (btnPractice) {
+    if (isPractice && anyPlaying) {
+      btnPractice.textContent = 'Parar teste';
+      btnPractice.className = 'btn btn-gold btn-sm'; // Laranja Crescimentum
+      btnPractice.onclick = stopAllTeams;
+    } else {
+      btnPractice.textContent = 'Iniciar teste';
+      btnPractice.className = 'btn btn-primary btn-sm'; // Vinho
+      btnPractice.onclick = () => setPhase('practice');
+    }
+  }
+
+  // Desativar botão de Rodada 1 quando já está em round1 ou round2
+  const r1Btn = document.getElementById('btnPhaseRound1');
+  if(r1Btn) {
+    if(data.phase === 'round1' || data.phase === 'round2') {
+      r1Btn.disabled = true;
+    } else {
+      r1Btn.disabled = false;
+    }
+  }
+
+  // Desativar botão de Rodada 2 quando já está em round2
+  const r2Btn = document.getElementById('btnPhaseRound2');
+  if(r2Btn) {
+    if(data.phase === 'round2') {
+      r2Btn.disabled = true;
+    } else {
+      r2Btn.disabled = false;
+    }
+  }
+
+  if(currentTab==='tabuleiros') updateOverview(data);
+  if(document.getElementById('expandOverlay').classList.contains('active')) renderExpand();
+}
+
+// ─── PLAYER STATE ─────────────────────────────────────────
+function handlePlayer(data){
+  const t=data.teams[myTeam];
+  if(!t) return;
+  // Reset dos flags para mostrar popups novamente quando mudar de rodada
+  if(data.phase === 'round1' && window._testStartShown && !window._round1StartShown){
+    // Não faz nada, só deixa o flag de round1 livre pra ser acionado abaixo
+  }
+
+  // Mostrar popup quando entrar em modo de jogo pela primeira vez
+  if(t.status==='playing' && !window._testStartShown){
+    window._testStartShown = true;
+    if(data.phase === 'practice'){
+      showScreen('testStartPopup');
+      return;
+    }
+  }
+
+  // Mostrar popup quando inicia Rodada 1
+  if(t.status==='playing' && !window._round1StartShown && data.phase === 'round1'){
+    window._round1StartShown = true;
+    showScreen('round1StartPopup');
+    return;
+  }
+
+  // Se status virou 'done' mas o jogador ainda achava que tava jogando, força reset
+  if(t.status==='done' && iAmPlaying){
+    iAmPlaying = false;
+  }
+
+  if(iAmPlaying) return;
+
+  if(t.status==='waiting'){
+    showPreGameWait('Aguardando <em>início...</em>', 'O(a) consultor(a) irá iniciar o jogo em breve.', '⏳');
+    return;
+  }
+
+  if(t.status==='done'){
+    const score = (t.board || []).filter(Boolean).length;
+    let tempoStr = '';
+    if (t.startTime) {
+      const end = t.endTime || Date.now();
+      tempoStr = ` em ${formatTime(end - t.startTime)}`;
+    }
+
+    const isTest = data.phase === 'practice';
+
+    if(t.fullBoard){
+      showPreGameWait('Tabuleiro <em>completo!</em>', `Incrível! ${score} casas preenchidas${tempoStr}.`, '🏆', true);
+    } else if(t.blocked){
+      // Adicionamos o <strong> para deixar o texto em negrito
+      showPreGameWait('Sem <em>saída!</em>', `O cavalo ficou sem movimentos possíveis.<br><strong>${score} casas preenchidas${tempoStr}.</strong>`, '😞', true);
+    } else {
+      const title = isTest ? 'O tempo para teste <em>acabou!</em>' : 'Equipe <em>finalizada!</em>';
+      const icon = isTest ? '🕒' : '😞';
+      const detail = isTest ? 'A rodada oficial começará em breve!' : `<strong>${score} casas preenchidas${tempoStr}.</strong>`;
+
+      showPreGameWait(title, detail, icon, true);
+    }
+
+    // Botão de reiniciar teste — só aparece se está em fase de teste E equipe ficou travada
+    if(isTest && t.blocked){
+      const card = document.querySelector('#preGameWait .card');
+      const oldBtn = document.getElementById('btnRestartWait');
+      if(oldBtn) oldBtn.remove();
+      const btn = document.createElement('button');
+      btn.id = 'btnRestartWait';
+      btn.className = 'btn btn-primary';
+      btn.style.marginTop = '8px';
+      btn.style.width = '100%';
+      btn.textContent = 'Reiniciar teste';
+      btn.onclick = () => restartTeamTest();
+      card.appendChild(btn);
+    }
+
+    const players = t.players || [];
+    const lastPlayerIdx = (t.turnIdx - 1 + players.length) % players.length;
+    const isLastPlayer = players.length > 0 && players[lastPlayerIdx] === myName;
+
+    return;
+  }
+
+  const players=t.players||[];
+  const rawIdx=t.turnIdx||0;
+  const turnIdx=players.length>0 ? rawIdx%players.length : 0;
+  const currentPlayer=players[turnIdx];
+
+  if(!currentPlayer){
+    showPreGameWait('Aguardando <em>jogadores(as)...</em>', 'Aguarde todas as pessoas entrarem na sessão.', '⏳');
+    return;
+  }
+
+  if(myName===currentPlayer){
+    window._pendingTurn={t,turnIdx};
+    if(players.length===1){
+      boardVisited=[...(t.board||Array(25).fill(false))];
+      horsePos=t.horsePos??-1;
+      pathClicks=[];
+      iAmPlaying=true;
+      renderGame(t,turnIdx);
+      showScreen('gameScreen');
+    } else {
+      document.getElementById('yourTurnSub').textContent=`${t.lCount||0} casas preenchidas até o momento.`;
+      showScreen('yourTurnScreen');
+    }
+  } else {
+    showSpectator(t, currentPlayer, turnIdx, players);
+
+    const doneActive=document.getElementById('doneScreen').classList.contains('active');
+    if(doneActive){
+      document.getElementById('donePlayingBanner').style.display='flex';
+      document.getElementById('donePlayingName').textContent=currentPlayer;
+    }
+  }
+}
+
+function showPreGameWait(msg, detail, emoji='⏳', hideAnim=false){
+  // Linha de segurança para remover botões antigos que ficaram presos na tela
+  const oldBtn = document.getElementById('btnRestartWait');
+  if(oldBtn) oldBtn.remove();
+
+  document.getElementById('preGameWait').style.display='flex';
+  document.getElementById('spectatorView').style.display='none';
+  document.getElementById('waitEmoji').textContent=emoji;
+  document.getElementById('waitingMsg').innerHTML=msg;
+  document.getElementById('waitingDetail').innerHTML=detail;
+  document.getElementById('waitingAnimDiv').style.display = hideAnim ? 'none' : 'flex';
+  showScreen('waitingScreen');
+}
+
+function showSpectator(t, currentPlayer, turnIdx, players){
+  document.getElementById('preGameWait').style.display='none';
+  document.getElementById('spectatorView').style.display='flex';
+
+  // Banner de quem joga
+  document.getElementById('pnbDot').style.background='#FF5527';
+  document.getElementById('pnbName').textContent=currentPlayer;
+  document.getElementById('pnbTurnCount').textContent=`jogada ${turnIdx+1}`;
+
+  // Próximo jogador
+  const nextPill=document.getElementById('nextPill');
+  if(players.length<=1){
+    nextPill.textContent='';
+  } else {
+    const nextIdx=(turnIdx+1)%players.length;
+    const nextPlayer=players[nextIdx];
+    const isMe=nextPlayer===myName;
+    nextPill.textContent=isMe?'⚡ Você é o próximo!':`A seguir: ${nextPlayer}`;
+    nextPill.style.color=isMe?'#FF5527':'#b89dd4';
+  }
+
+  // Score
+  const score=(t.board||[]).filter(Boolean).length;
+  document.getElementById('specScore').textContent=t.lCount||0;
+
+  // Tabuleiro read-only
+  buildSpectatorBoard(t.board||Array(25).fill(false), t.horsePos??-1, t.currentPath||[]);
+
+  showScreen('waitingScreen');
+}
+
+function buildSpectatorBoard(visited, hPos, path){
+  const b=document.getElementById('spectatorBoard');
+  b.innerHTML='';
+  const pathArr=path||[];
+  for(let i=0;i<25;i++){
+    const cell=document.createElement('div');
+    cell.className='cell readonly';
+    const pathIdx=pathArr.indexOf(i);
+    if(i===hPos){
+      cell.classList.add('horse');
+      cell.textContent='♞';
+    } else if(pathIdx!==-1){
+      cell.classList.add('in-path');
+    } else if(visited[i]){
+      cell.classList.add('visited');
+      cell.textContent='·';
+    }
+    b.appendChild(cell);
+  }
+}
+
+// ─── MY TURN → BOARD ──────────────────────────────────────
+function goToBoard(){
+  const {t,turnIdx}=window._pendingTurn||{};
+  if(!t) return;
+  boardVisited=[...(t.board||Array(25).fill(false))];
+  horsePos=t.horsePos??-1;
+  pathClicks=[];
+  iAmPlaying=true;
+  renderGame(t,turnIdx);
+  showScreen('gameScreen');
+};
+
+// Retorna true se o cavalo não tem nenhum salto válido disponível
+function isBlocked() {
+  if (horsePos === -1) return false;
+  const {r, c} = rc(horsePos);
+  const jumps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+  // Blocked only if every valid knight destination already has an X
+  return jumps.every(([dr, dc]) => {
+    const nr = r + dr, nc = c + dc;
+    if (nr < 0 || nr > 4 || nc < 0 || nc > 4) return true;
+    return boardVisited[nr * 5 + nc]; // destination has X
+  });
+}
+
+function renderGame(t, turnIdx) {
+  document.getElementById('gteam').textContent = myTeam;
+  const score = boardVisited.filter(Boolean).length;
+  const casas = (t.board||[]).filter(Boolean).length;
+  
+  document.getElementById('gscore').textContent = casas;
+  
+  // Atualiza status do turno
+  const players = t.players || [];
+  const currentPlayer = players[turnIdx] || myName;
+  const turnStatusEl = document.getElementById('turnStatus');
+  if(currentPlayer === myName){
+    turnStatusEl.innerHTML = 'É a <strong>sua vez</strong> de jogar!';
+  } else {
+    turnStatusEl.innerHTML = `<strong>${currentPlayer}</strong> está jogando!`;
+  }
+
+  buildBoard();
+  // Checar bloqueio ao abrir o tabuleiro
+  if (horsePos !== -1 && isBlocked()) {
+    setTimeout(() => handleBlocked(score), 300);
+  }
+}
+
+// ─── HINT ─────────────────────────────────────────────────
+function updateHint(){
+  const step=pathClicks.length;
+  const hintText=document.getElementById('hintText');
+  const stepDots=document.getElementById('stepDots');
+  const cancelHint=document.getElementById('cancelHint');
+  if(horsePos===-1){
+    hintText.innerHTML='Clique em qualquer casa para <strong>posicionar o cavalo</strong>';
+    stepDots.innerHTML=''; cancelHint.textContent=''; return;
+  }
+  const msgs=[
+    'Clique na <strong>1ª casa</strong> do L',
+    'Clique na <strong>2ª casa</strong> do L',
+    'Clique na <strong>3ª casa</strong> — vai confirmar automaticamente'
+  ];
+  hintText.innerHTML=msgs[step]||'';
+  stepDots.innerHTML='';
+  for(let i=0;i<3;i++){
+    const d=document.createElement('span');
+    d.className='sdot'+(i<step?' done':i===step?' active':'');
+    stepDots.appendChild(d);
+  }
+  cancelHint.textContent=step>0?'Se necessário, clique no ♞ para cancelar o caminho':'';
+}
+
+// ─── INTERACTIVE BOARD ────────────────────────────────────
+function buildBoard(){
+  const b=document.getElementById('board');
+  b.innerHTML='';
+  for(let i=0;i<25;i++){
+    const cell=document.createElement('div');
+    cell.className='cell';
+    const pathIdx=pathClicks.indexOf(i);
+    if(i===horsePos){
+      cell.classList.add('horse');
+      cell.textContent='♞';
+      if(pathClicks.length>0) cell.onclick=()=>{ pathClicks=[]; updateHint(); buildBoard(); toast('Caminho cancelado','#b89dd4'); pushLiveState(); };
+    } else if(pathIdx!==-1){
+      // Cell is part of current L path (not destination yet)
+      cell.classList.add('in-path');
+    } else if(boardVisited[i]){
+      // Has an X — show X, not clickable as destination but path can pass through
+      cell.classList.add('visited');
+      cell.textContent='✕';
+      cell.onclick=()=>handleClick(i); // allow clicking to pass through as path step
+    } else {
+      cell.classList.add('selectable');
+      cell.onclick=()=>handleClick(i);
+    }
+    b.appendChild(cell);
+  }
+}
+
+function flashCell(i){
+  const cells=document.querySelectorAll('#board .cell');
+  if(cells[i]){ cells[i].classList.add('invalid-flash'); setTimeout(()=>cells[i].classList.remove('invalid-flash'),400); }
+}
+
+function pushLiveState(){
+  update(ref(db,`cavalo/${sessionCode}/teams/${myTeam}`),{
+    horsePos, currentPath: pathClicks
+  });
+}
+
+function handleClick(i){
+  if(horsePos===-1){
+    horsePos=i; pathClicks=[];
+    updateHint(); buildBoard();
+    pushLiveState();
+    return;
+  }
+  
+  if(i===horsePos){ return; }
+
+  // Se clicar em uma casa já selecionada no trajeto, cancela tudo automaticamente
+  if(pathClicks.includes(i)){ 
+    pathClicks = [];
+    updateHint(); buildBoard(); pushLiveState();
+    flashCell(i);
+    return; 
+  }
+
+  const lastIdx=pathClicks.length>0?pathClicks[pathClicks.length-1]:horsePos;
+  const a=rc(lastIdx), b=rc(i);
+  
+  // Se tentar pular muito longe de uma vez, cancela tudo automaticamente
+  if(Math.abs(a.r-b.r)+Math.abs(a.c-b.c)!==1){
+    pathClicks = [];
+    updateHint(); buildBoard(); pushLiveState();
+    flashCell(i); 
+    return;
+  }
+  
+  pathClicks.push(i);
+
+  if(pathClicks.length===3){
+    const fullPath=[horsePos,...pathClicks];
+    if(!isValidL(fullPath)){
+      pathClicks=[];
+      flashCell(i);
+      updateHint(); buildBoard();
+      pushLiveState();
+      return;
+    }
+    
+    const dest=fullPath[3];
+    if(boardVisited[dest]){
+      pathClicks=[];
+      flashCell(dest);
+      toast('Ops, essa casa já foi preenchida!','#E6233A');
+      updateHint(); buildBoard();
+      pushLiveState();
+      return;
+    }
+    doMove(fullPath); return;
+  }
+  updateHint(); buildBoard();
+  pushLiveState();
+}
+
+// handleBlocked: cavalo sem saída
+async function handleBlocked(score) {
+  const snap = await get(ref(db, `cavalo/${sessionCode}/teams/${myTeam}`));
+  const t = snap.val();
+  const players_list = t.players || [];
+  const newTurnIdx = (t.turnIdx || 0) + 1;
+  // Turnos ciclam — nunca termina por contagem, só por bloqueio ou tabuleiro completo
+  const isLast = false;
+  // Marcar como bloqueado no Firebase para o admin ver
+  await update(ref(db, `cavalo/${sessionCode}/teams/${myTeam}`), {
+    blocked: true,
+    blockedAt: score,
+    turnIdx: newTurnIdx,
+    status: 'done',
+    lastMoveBy: myName,
+    endTime: Date.now()
+  });
+  // Mostrar aviso pro jogador
+  document.getElementById('hintText').innerHTML =
+    '😞 <strong>Cavalo bloqueado!</strong> Não há mais movimentos possíveis.';
+  document.getElementById('stepDots').innerHTML = '';
+  document.getElementById('cancelHint').textContent = '';
+  document.getElementById('gameInfo').textContent =
+    `Sua equipe percorreu ${score} casas até ficar bloqueada.`;
+  // Desabilitar todas as células
+  document.querySelectorAll('#board .cell').forEach(c => {
+    c.onclick = null; c.style.cursor = 'default';
+  });
+  toast('Cavalo bloqueado! Sem movimentos disponíveis. 😞', '#e05858');
+  iAmPlaying=false;
+}
+
+async function doMove(path) {
+  const dest = path[3];
+  const newBoard = [...boardVisited];
+  // Only the destination (last cell) gets an X
+  newBoard[path[3]] = true;
+  const snap = await get(ref(db, `cavalo/${sessionCode}/teams/${myTeam}`));
+  const t = snap.val();
+  const players_list = t.players || [];
+  const newTurnIdx = (t.turnIdx || 0) + 1;
+  // Turnos ciclam — nunca termina por contagem, só por bloqueio ou tabuleiro completo
+  const isLast = false;
+  const newScore = newBoard.filter(Boolean).length;
+  const newLCount = (t.lCount || 0) + 1;
+
+  // Checar se próximo jogador vai estar bloqueado
+  const {r, c} = rc(dest);
+  const jumps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+  const nextBlocked = jumps.every(([dr, dc]) => {
+    const nr = r + dr, nc = c + dc;
+    if (nr < 0 || nr > 4 || nc < 0 || nc > 4) return true;
+    return newBoard[nr * 5 + nc]; // all knight destinations have X
+  });
+
+  const fullBoard = newBoard.every(Boolean);
+  const isDone = nextBlocked || fullBoard;
+  // Ciclar turno entre os jogadores da equipe
+  const cycledTurnIdx = players_list.length > 0 ? newTurnIdx % players_list.length : 0;
+
+  const updates = {
+    board: newBoard, horsePos: dest, currentPath: [],
+    turnIdx: isDone ? newTurnIdx : cycledTurnIdx,
+    score: newScore, lCount: newLCount,
+    status: isDone ? 'done' : 'playing',
+    blocked: nextBlocked || false,
+    fullBoard: fullBoard || false
+  };
+  if (isDone) updates.endTime = Date.now();
+  await update(ref(db, `cavalo/${sessionCode}/teams/${myTeam}`), updates);
+
+  if (fullBoard) {
+    document.getElementById('doneEmoji').textContent = '🏆';
+    document.getElementById('doneMsg').innerHTML = `Tabuleiro <em>completo!</em>`;
+    document.getElementById('doneDetail').innerHTML = `<strong>${newLCount} casas preenchidas.</strong><br>Parabéns! Aguarde o resultado.`;
+  } else if (nextBlocked) {
+    document.getElementById('doneEmoji').textContent = '😞';
+    document.getElementById('doneMsg').innerHTML = `Sem <em>saída!</em>`;
+    document.getElementById('doneDetail').innerHTML = `<strong>Jogada aceita! Total: ${newLCount} casas preenchidas.</strong><br>O cavalo não tem mais para onde ir.`;
+  } else {
+    // Mudamos para o olho piscando e aplicamos as quebras de linha e negrito
+    document.getElementById('doneEmoji').textContent = '😉';
+    document.getElementById('doneMsg').innerHTML = `Jogada <em>realizada!</em>`;
+    document.getElementById('doneDetail').innerHTML = `<strong>${newLCount} casas preenchidas até o momento.</strong><br>Aguarde a próxima pessoa.`;
+  }
+  document.getElementById('donePlayingBanner').style.display = 'none';
+  iAmPlaying=false;
+  // Se só tem uma pessoa, volta direto pro tabuleiro
+  if(!isDone && players_list.length===1){
+    boardVisited=newBoard;
+    horsePos=dest;
+    pathClicks=[];
+    iAmPlaying=true;
+    const snap2=await get(ref(db,`cavalo/${sessionCode}/teams/${myTeam}`));
+    renderGame(snap2.val(), cycledTurnIdx);
+    showScreen('gameScreen');
+  } else if (!isDone) {
+    showScreen('doneScreen');
+  }
+}
+
+// ─── RESULTS ──────────────────────────────────────────────
+function renderRankingPopup(data){
+  const sorted=Object.entries(data.teams).sort((a,b)=>{
+    const scoreA = (a[1].board||[]).filter(Boolean).length;
+    const scoreB = (b[1].board||[]).filter(Boolean).length;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    const timeA = (a[1].endTime || 0) - (a[1].startTime || 0);
+    const timeB = (b[1].endTime || 0) - (b[1].startTime || 0);
+    return timeA - timeB;
+  });
+  const posicoes=['1º lugar','2º lugar','3º lugar','4º lugar','5º lugar','6º lugar','7º lugar','8º lugar','9º lugar','10º lugar'];
+  const podium=document.getElementById('rankingPodium');
+  podium.innerHTML='';
+  // Modo compacto se tiver mais de 5 equipes
+  podium.className = sorted.length > 5 ? 'ranking-grid compact' : 'ranking-grid';
+  sorted.forEach(([name,t],i)=>{
+    const lCount=t.lCount||0;
+    const casas=(t.board||[]).filter(Boolean).length;
+    
+    let tempoStr = '—';
+    if (t.startTime && t.endTime) {
+      tempoStr = formatTime(t.endTime - t.startTime);
+    }
+
+    // Lógica de Melhoria Colaborativa
+    let labelMelhoria = '';
+    if (t.history_round1) {
+      const h = t.history_round1;
+      const melhorouL = lCount > h.lCount;
+      const tempoAtual = (t.endTime - t.startTime);
+      const melhorouTempo = tempoAtual < h.time;
+      
+      if (melhorouL || melhorouTempo) {
+        labelMelhoria = `<div class="t-row" style="background:#77AD18;color:#fff;text-align:center;white-space:normal;font-size:0.8rem;"><strong>Desempenho superado!</strong></div>`;
+      } else {
+        labelMelhoria = `<div class="t-row" style="background:#8a6868;color:#fff;text-align:center;white-space:normal;font-size:0.8rem;"><strong>Sem evolução nesta rodada</strong></div>`;
+      }
+    }
+    
+    const item=document.createElement('div');
+    item.className='team-card';
+    item.innerHTML=`
+      <div class="team-card-header">${name}</div>
+      <div class="team-card-body">
+        <div class="t-row"><strong>Posição:</strong> ${posicoes[i]||(i+1)+'º lugar'}</div>
+        <div class="t-row"><strong>Casas:</strong> ${casas}</div>
+        <div class="t-row"><strong>Tempo:</strong> ${tempoStr}</div>
+        ${labelMelhoria}
+      </div>
+    `;
+    podium.appendChild(item);
+  });
+}
+function renderResults(data){
+  const sorted=Object.entries(data.teams).sort((a,b)=>{
+    const scoreA = (a[1].board||[]).filter(Boolean).length;
+    const scoreB = (b[1].board||[]).filter(Boolean).length;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    const timeA = (a[1].endTime || 0) - (a[1].startTime || 0);
+    const timeB = (b[1].endTime || 0) - (b[1].startTime || 0);
+    return timeA - timeB;
+  });
+  const posicoes=['1º lugar','2º lugar','3º lugar','4º lugar','5º lugar','6º lugar','7º lugar','8º lugar','9º lugar','10º lugar'];
+  const podium=document.getElementById('resultPodium');
+  podium.innerHTML='';
+  // Modo compacto se tiver mais de 5 equipes
+  podium.className = sorted.length > 5 ? 'ranking-grid compact' : 'ranking-grid';
+  sorted.forEach(([name,t],i)=>{
+    const lCount=t.lCount||0;
+    const casas=(t.board||[]).filter(Boolean).length;
+    
+    let tempoStr = '—';
+    if (t.startTime && t.endTime) {
+      tempoStr = formatTime(t.endTime - t.startTime);
+    }
+
+    // Lógica de Melhoria Colaborativa
+    let labelMelhoria = '';
+    if (t.history_round1) {
+      const h = t.history_round1;
+      const melhorouL = lCount > h.lCount;
+      const tempoAtual = (t.endTime - t.startTime);
+      const melhorouTempo = tempoAtual < h.time;
+      
+      if (melhorouL || melhorouTempo) {
+        labelMelhoria = `<div class="t-row" style="background:#77AD18;color:#fff;text-align:center;white-space:normal;font-size:0.8rem;"><strong>Desempenho superado!</strong></div>`;
+      } else {
+        labelMelhoria = `<div class="t-row" style="background:#8a6868;color:#fff;text-align:center;white-space:normal;font-size:0.8rem;"><strong>Sem evolução nesta rodada</strong></div>`;
+      }
+    }
+    
+    const item=document.createElement('div');
+    item.className='team-card';
+    item.innerHTML=`
+      <div class="team-card-header">${name}</div>
+      <div class="team-card-body">
+        <div class="t-row"><strong>Posição:</strong> ${posicoes[i]||(i+1)+'º lugar'}</div>
+        <div class="t-row"><strong>Casas:</strong> ${casas}</div>
+        <div class="t-row"><strong>Tempo:</strong> ${tempoStr}</div>
+        ${labelMelhoria}
+      </div>
+    `;
+    podium.appendChild(item);
+  });
+}
+
+// ─── RECONNECT ────────────────────────────────────────────
+async function tryReconnect(){
+  const adm=sessionStorage.getItem('cavalo_admin');
+  if(adm){
+    const s=JSON.parse(adm);
+    const snap=await get(ref(db,`cavalo/${s.code}`));
+    if(!snap.exists()){ sessionStorage.removeItem('cavalo_admin'); return; }
+    sessionCode=s.code; isAdmin=true;
+    document.getElementById('displayCode').textContent=s.code;
+    listenSession(); showScreen('lobbyScreen'); return;
+  }
+  const plr=sessionStorage.getItem('cavalo_player');
+  if(plr){
+    const s=JSON.parse(plr);
+    const snap=await get(ref(db,`cavalo/${s.code}`));
+    if(!snap.exists()){ sessionStorage.removeItem('cavalo_player'); return; }
+    sessionCode=s.code; myTeam=s.team; myName=s.name;
+    listenSession();
+  }
+}
+
+document.getElementById('joinCode').addEventListener('blur', async function(){
+  const code=this.value.trim().toUpperCase();
+  if(!code) return;
+  const snap=await get(ref(db,`cavalo/${code}`));
+  if(!snap.exists()) return;
+  const sel=document.getElementById('joinTeam');
+  sel.innerHTML='<option value="">Selecione...</option>';
+  Object.keys(snap.val().teams||{}).forEach(n=>{
+    const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o);
+  });
+});
+
+tryReconnect();
+
+// Atualizar tempo dos cards de equipe a cada segundo (só pro admin)
+setInterval(() => {
+  if (isAdmin && gameState && document.getElementById('lobbyScreen').classList.contains('active')) {
+    updateLobby(gameState);
+  }
+}, 1000);
+
+// ─── EXPOR TODAS AS FUNÇÕES PARA O ESCOPO GLOBAL ──────────
+window.showScreen = showScreen;
+window.showAdminPassword = showAdminPassword;
+window.checkAdminPass = checkAdminPass;
+window.loadActiveSessions = loadActiveSessions;
+window.enterSession = enterSession;
+window.deleteSession = deleteSession;
+window.createSession = createSession;
+window.joinGame = joinGame;
+window.switchTab = switchTab;
+window.goToBoard = goToBoard;
+window.publishResults = publishResults;
+window.closeRanking = closeRanking;
+window.clearSession = clearSession;
+window.closeExpand = closeExpand;
+window.navigateExpand = navigateExpand;
+window.startTeam = startTeam;
+window.setPhase = setPhase;
+function closeTestStartPopup(){
+  // Depois de fechar o popup, chama handlePlayer de novo pra decidir pra onde ir
+  handlePlayer(gameState);
+}
+function closeRound1Popup(){
+  // Depois de fechar o popup, chama handlePlayer de novo pra decidir pra onde ir
+  handlePlayer(gameState);
+}
+
+async function closeRankingPopup(){
+  await update(ref(db,`cavalo/${sessionCode}`),{status:'active'});
+  showScreen('lobbyScreen');
+}
+
+async function restartTeamTest(){
+  // Reinicia o tabuleiro da equipe do jogador (só funciona na fase de teste)
+  await update(ref(db, `cavalo/${sessionCode}/teams/${myTeam}`), {
+    status: 'playing',
+    turnIdx: 0,
+    board: Array(25).fill(false),
+    horsePos: -1,
+    currentPath: [],
+    lCount: 0,
+    blocked: false,
+    fullBoard: false,
+    startTime: Date.now(),
+    endTime: null
+  });
+  iAmPlaying = false;
+  // Remove o botão depois de reiniciar
+  const oldBtn = document.getElementById('btnRestartWait');
+  if(oldBtn) oldBtn.remove();
+}
+async function stopAllTeams(){
+  if(!confirm('Deseja parar o teste para TODAS as equipes?')) return;
+  
+  const snap = await get(ref(db, `cavalo/${sessionCode}/teams`));
+  if(!snap.exists()) return;
+  
+  const teams = snap.val();
+  const updates = {};
+  
+  Object.keys(teams).forEach(name => {
+    if(teams[name].status === 'playing') {
+      updates[`teams/${name}/status`] = 'done';
+      updates[`teams/${name}/endTime`] = Date.now();
+    }
+  });
+  
+  await update(ref(db, `cavalo/${sessionCode}`), updates);
+  toast('Teste parado com sucesso!', '#E6233A');
+}
+window.closeTestStartPopup = closeTestStartPopup;
+window.closeRound1Popup = closeRound1Popup;
+window.restartTeamTest = restartTeamTest;
+window.closeRankingPopup = closeRankingPopup;
+window.stopAllTeams = stopAllTeams;
+
+</script>
+</body>
+</html>
