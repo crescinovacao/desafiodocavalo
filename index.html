@@ -166,7 +166,7 @@ select option { background:#fff; color:var(--text); }
 .sdot { width:8px; height:8px; border-radius:50%; background:var(--border); display:inline-block; transition:background 0.2s; }
 .sdot.done { background:var(--accent); }
 .sdot.active { background:var(--accent); transform:scale(1.3); }
-.cancel-hint { font-size:0.72rem; color:var(--muted); font-weight:600; text-align:center; margin-top:2px; }
+.cancel-hint { font-size:0.82rem; color:#210000; text-align:center; margin-top:2px; }
 
 .waiting-anim { display:flex; gap:6px; justify-content:center; }
 .waiting-anim span { width:8px; height:8px; background:var(--accent); border-radius:50%; animation:bounce 1.2s ease infinite; }
@@ -324,6 +324,10 @@ select option { background:#fff; color:var(--text); }
         <button id="btnPhaseRound2" class="btn btn-primary btn-sm" style="flex:1; padding: 10px 12px;" onclick="setPhase('round2')">Rodada 2</button>
         <button class="btn btn-primary btn-sm" id="btnResult" style="flex:1; padding: 10px 12px;" onclick="publishResults()">Ranking</button>
     </div>
+    <div id="phaseTimer" style="display:none;text-align:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);font-family:'Raleway',sans-serif;">
+      <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;" id="phaseTimerLabel">Teste em andamento</div>
+      <div style="font-size:2.2rem;font-weight:900;color:var(--accent);line-height:1.1;" id="phaseTimerValue">00:00</div>
+    </div>
   </div>
 
   <div style="background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; display: flex; width: 100%; gap: 4px; margin-bottom: 4px;">
@@ -376,16 +380,17 @@ select option { background:#fff; color:var(--text); }
 
   <!-- Spectator: jogo rolando — vê o tabuleiro ao vivo -->
   <div id="spectatorView" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%;">
-    <div class="card" style="display:flex;flex-direction:column;gap:14px;align-items:center;width:100%;">
+    <div class="card" style="display:flex;flex-direction:column;gap:10px;align-items:center;width:100%;padding:18px;">
       <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
         <div style="font-family:'Raleway',sans-serif;font-weight:800;color:var(--accent);font-size:1.1rem;" id="specTeamName">Equipe A</div>
         <div style="font-family:'Raleway',sans-serif;font-weight:900;color:var(--text);font-size:1.1rem;"><span id="specScore">0</span> casas</div>
       </div>
-      <div style="width:100%;background:var(--surface2);border-radius:10px;padding:12px 16px;text-align:center;font-weight:700;color:var(--text);" id="specStatus">
+      <div style="width:100%;background:var(--surface2);border-radius:10px;padding:8px 16px;text-align:center;font-weight:700;color:var(--text);" id="specStatus">
         <span id="pnbName">—</span> está jogando!
       </div>
       <div class="board-wrap" style="background:var(--surface2);border-radius:10px;padding:14px;width:100%;"><div class="board" id="spectatorBoard"></div></div>
       <div id="nextPill" style="color:var(--muted);font-size:0.82rem;text-align:center;"></div>
+      <button id="btnResetTestSpec" onclick="resetTeamTest()" style="display:none;background:#210000;border:2px solid #210000;color:#fff;padding:8px 16px;border-radius:20px;font-family:'Raleway',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;margin-top:4px;">Reiniciar teste da equipe</button>
     </div>
     <!-- Elementos ocultos para compatibilidade -->
     <div style="display:none;">
@@ -408,16 +413,17 @@ select option { background:#fff; color:var(--text); }
 
 <!-- GAME (interactive board) -->
 <div id="gameScreen" class="screen">
-  <div class="card" style="display:flex;flex-direction:column;gap:14px;align-items:center;width:100%;">
+  <div class="card" style="display:flex;flex-direction:column;gap:10px;align-items:center;width:100%;padding:18px;">
     <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
       <div style="font-family:'Raleway',sans-serif;font-weight:800;color:var(--accent);font-size:1.1rem;" id="gteam">Equipe A</div>
       <div style="font-family:'Raleway',sans-serif;font-weight:900;color:var(--text);font-size:1.1rem;"><span id="gscore">0</span> casas</div>
     </div>
-    <div style="width:100%;background:var(--surface2);border-radius:10px;padding:12px 16px;text-align:center;font-weight:700;color:var(--text);" id="turnStatus">
+    <div style="width:100%;background:var(--surface2);border-radius:10px;padding:8px 16px;text-align:center;font-weight:700;color:var(--text);" id="turnStatus">
       É a sua vez de jogar!
     </div>
-    <div class="board-wrap" style="background:var(--surface2);border-radius:10px;padding:14px;width:100%;"><div class="board" id="board"></div></div>
+    <div class="board-wrap" style="background:var(--surface2);border-radius:10px;padding:10px;width:100%;"><div class="board" id="board"></div></div>
     <div class="cancel-hint" id="cancelHint"></div>
+    <button id="btnResetTestGame" onclick="resetTeamTest()" style="display:none;background:#210000;border:2px solid #210000;color:#fff;padding:8px 16px;border-radius:20px;font-family:'Raleway',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;margin-top:4px;">Reiniciar teste da equipe</button>
   </div>
   <!-- Elementos ocultos para compatibilidade com código antigo -->
   <div style="display:none;">
@@ -447,6 +453,16 @@ select option { background:#fff; color:var(--text); }
     <div class="logo" style="font-size:2rem;line-height:1.2;">Rodada <em>iniciada!</em></div>
     <div class="info-text" style="margin-top:-8px;">Esse é o momento de colocar a estratégia em ação.<br><strong>Boa sorte!</strong></div>
     <button class="btn btn-primary" onclick="closeRound1Popup()" style="margin-top:8px;width:100%;">Entendido</button>
+  </div>
+</div>
+
+<!-- ROUND 2 START POPUP -->
+<div id="round2StartPopup" class="screen">
+  <div class="card" style="display:flex;flex-direction:column;gap:18px;text-align:center;align-items:center;">
+    <div style="font-size:3.5rem;animation:horsePop 0.6s ease;">🔥</div>
+    <div class="logo" style="font-size:2rem;line-height:1.2;">Rodada 2 <em>iniciada!</em></div>
+    <div class="info-text" style="margin-top:-8px;">Vocês compartilharam e aprenderam juntos(as).<br><strong>Agora é hora de transformar colaboração em resultado!</strong></div>
+    <button class="btn btn-primary" onclick="closeRound2Popup()" style="margin-top:8px;width:100%;">Entendido</button>
   </div>
 </div>
 
@@ -809,7 +825,35 @@ async function startTeam(name){
   });
   toast(`${name} começando!`);
 };
+// Timer da fase atual (admin)
+let phaseTimerInterval = null;
+function startPhaseTimer(phase, startTime){
+  stopPhaseTimer();
+  const labels = { 'practice': 'Teste em andamento', 'round1': 'Rodada 1 em andamento', 'round2': 'Rodada 2 em andamento' };
+  const labelEl = document.getElementById('phaseTimerLabel');
+  const valueEl = document.getElementById('phaseTimerValue');
+  const timerEl = document.getElementById('phaseTimer');
+  if(!labelEl || !valueEl || !timerEl) return;
+  
+  labelEl.textContent = labels[phase] || 'Em andamento';
+  timerEl.style.display = 'block';
+  
+  function updateTimer(){
+    const elapsed = Date.now() - startTime;
+    const mins = Math.floor(elapsed / 60000);
+    const secs = Math.floor((elapsed % 60000) / 1000);
+    valueEl.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  }
+  updateTimer();
+  phaseTimerInterval = setInterval(updateTimer, 1000);
+}
 
+function stopPhaseTimer(){
+  if(phaseTimerInterval) clearInterval(phaseTimerInterval);
+  phaseTimerInterval = null;
+  const timerEl = document.getElementById('phaseTimer');
+  if(timerEl) timerEl.style.display = 'none';
+}
 async function setPhase(phase) {
   const msgs = {
     'practice': 'Teste',
@@ -823,7 +867,7 @@ async function setPhase(phase) {
   if(!snap.exists()) return;
   const teams = snap.val();
 
-  const updates = { phase: phase, status: 'active' };
+  const updates = { phase: phase, status: 'active', phaseStartTime: Date.now() };
 
   Object.keys(teams).forEach(teamName => {
     const t = teams[teamName];
@@ -847,10 +891,14 @@ async function setPhase(phase) {
 
   await update(ref(db, `cavalo/${sessionCode}`), updates);
   toast(msgs[phase], '#4ecb71');
+  
+  // Ativar timer da fase (usa o mesmo timestamp salvo no Firebase)
+  startPhaseTimer(phase, updates.phaseStartTime);
 }
 
 async function publishResults(){
-  await update(ref(db,`cavalo/${sessionCode}`),{status:'ranking'});
+  await update(ref(db,`cavalo/${sessionCode}`),{status:'ranking', phaseStartTime: null});
+  stopPhaseTimer();
   showScreen('rankingPopup');
 };
 
@@ -938,6 +986,15 @@ function formatTime(ms){
 }
 
 function updateLobby(data){
+  // Restaurar timer da fase se houver uma fase ativa (depois de F5)
+  if(data.phaseStartTime && data.phase && !phaseTimerInterval && data.status !== 'ranking'){
+    startPhaseTimer(data.phase, data.phaseStartTime);
+  }
+  // Se phaseStartTime foi limpo (teste parado), para o timer
+  if(!data.phaseStartTime && phaseTimerInterval){
+    stopPhaseTimer();
+  }
+  
   const grid=document.getElementById('teamsGrid');
   grid.innerHTML='';
   let allDone=true;
@@ -998,22 +1055,41 @@ function updateLobby(data){
     }
   }
 
-  // Desativar botão de Rodada 1 quando já está em round1 ou round2
+  // Lógica do botão de Rodada 1 (Iniciar/Parar)
+  const isRound1 = data.phase === 'round1';
   const r1Btn = document.getElementById('btnPhaseRound1');
   if(r1Btn) {
-    if(data.phase === 'round1' || data.phase === 'round2') {
+    if(isRound1 && anyPlaying){
+      r1Btn.textContent = 'Parar rodada 1';
+      r1Btn.className = 'btn btn-gold btn-sm';
+      r1Btn.onclick = stopAllTeams;
+      r1Btn.disabled = false;
+    } else if(data.phase === 'round2'){
+      r1Btn.textContent = 'Rodada 1';
+      r1Btn.className = 'btn btn-primary btn-sm';
+      r1Btn.onclick = () => setPhase('round1');
       r1Btn.disabled = true;
     } else {
+      r1Btn.textContent = 'Rodada 1';
+      r1Btn.className = 'btn btn-primary btn-sm';
+      r1Btn.onclick = () => setPhase('round1');
       r1Btn.disabled = false;
     }
   }
 
-  // Desativar botão de Rodada 2 quando já está em round2
+  // Lógica do botão de Rodada 2 (Iniciar/Parar)
+  const isRound2 = data.phase === 'round2';
   const r2Btn = document.getElementById('btnPhaseRound2');
   if(r2Btn) {
-    if(data.phase === 'round2') {
-      r2Btn.disabled = true;
+    if(isRound2 && anyPlaying){
+      r2Btn.textContent = 'Parar rodada 2';
+      r2Btn.className = 'btn btn-gold btn-sm';
+      r2Btn.onclick = stopAllTeams;
+      r2Btn.disabled = false;
     } else {
+      r2Btn.textContent = 'Rodada 2';
+      r2Btn.className = 'btn btn-primary btn-sm';
+      r2Btn.onclick = () => setPhase('round2');
       r2Btn.disabled = false;
     }
   }
@@ -1047,6 +1123,13 @@ function handlePlayer(data){
     return;
   }
 
+  // Mostrar popup quando inicia Rodada 2
+  if(t.status==='playing' && !window._round2StartShown && data.phase === 'round2'){
+    window._round2StartShown = true;
+    showScreen('round2StartPopup');
+    return;
+  }
+
   // Se status virou 'done' mas o jogador ainda achava que tava jogando, força reset
   if(t.status==='done' && iAmPlaying){
     iAmPlaying = false;
@@ -1075,9 +1158,25 @@ function handlePlayer(data){
       // Adicionamos o <strong> para deixar o texto em negrito
       showPreGameWait('Sem <em>saída!</em>', `O cavalo ficou sem movimentos possíveis.<br><strong>${score} casas preenchidas${tempoStr}.</strong>`, '😞', true);
     } else {
-      const title = isTest ? 'O tempo para teste <em>acabou!</em>' : 'Equipe <em>finalizada!</em>';
-      const icon = isTest ? '🕒' : '😞';
-      const detail = isTest ? 'A rodada oficial começará em breve!' : `<strong>${score} casas preenchidas${tempoStr}.</strong>`;
+      // Mensagens dinâmicas por fase
+      let title, icon, detail;
+      if(isTest){
+        title = 'O tempo para teste <em>acabou!</em>';
+        icon = '🕒';
+        detail = 'A rodada oficial começará em breve!';
+      } else if(data.phase === 'round1'){
+        title = 'Rodada 1 <em>finalizada!</em>';
+        icon = '🏁';
+        detail = `<strong>${score} casas preenchidas${tempoStr}.</strong>`;
+      } else if(data.phase === 'round2'){
+        title = 'Rodada 2 <em>finalizada!</em>';
+        icon = '🏁';
+        detail = `<strong>${score} casas preenchidas${tempoStr}.</strong>`;
+      } else {
+        title = 'Equipe <em>finalizada!</em>';
+        icon = '😞';
+        detail = `<strong>${score} casas preenchidas${tempoStr}.</strong>`;
+      }
 
       showPreGameWait(title, detail, icon, true);
     }
@@ -1108,6 +1207,14 @@ function handlePlayer(data){
   const rawIdx=t.turnIdx||0;
   const turnIdx=players.length>0 ? rawIdx%players.length : 0;
   const currentPlayer=players[turnIdx];
+
+  // Mostrar/esconder botão de reiniciar teste — só na fase 'practice' e só pra primeira pessoa da equipe
+  const isFirstPlayer = players.length > 0 && players[0] === myName;
+  const showResetBtn = isFirstPlayer && data.phase === 'practice' && t.status === 'playing';
+  const btnGame = document.getElementById('btnResetTestGame');
+  const btnSpec = document.getElementById('btnResetTestSpec');
+  if(btnGame) btnGame.style.display = showResetBtn ? 'inline-block' : 'none';
+  if(btnSpec) btnSpec.style.display = showResetBtn ? 'inline-block' : 'none';
 
   if(!currentPlayer){
     showPreGameWait('Aguardando <em>jogadores(as)...</em>', 'Aguarde todas as pessoas entrarem na sessão.', '⏳');
@@ -1153,6 +1260,7 @@ function showPreGameWait(msg, detail, emoji='⏳', hideAnim=false){
 }
 
 function showSpectator(t, currentPlayer, turnIdx, players){
+  showScreen('waitingScreen');
   document.getElementById('preGameWait').style.display='none';
   document.getElementById('spectatorView').style.display='flex';
 
@@ -1161,7 +1269,6 @@ function showSpectator(t, currentPlayer, turnIdx, players){
   
   // Status: quem está jogando
   document.getElementById('specStatus').innerHTML = `<strong>${currentPlayer}</strong> está jogando!`;
-  document.getElementById('pnbName').textContent=currentPlayer;
 
   // Próximo jogador
   const nextPill=document.getElementById('nextPill');
@@ -1172,7 +1279,7 @@ function showSpectator(t, currentPlayer, turnIdx, players){
     const nextPlayer=players[nextIdx];
     const isMe=nextPlayer===myName;
     nextPill.textContent=isMe?'⚡ Você é o(a) próximo(a)!':`A seguir: ${nextPlayer}`;
-    nextPill.style.color=isMe?'#FF5527':'var(--muted)';
+    nextPill.style.color='#210000';
   }
 
   // Score
@@ -1200,7 +1307,7 @@ function buildSpectatorBoard(visited, hPos, path){
       cell.classList.add('in-path');
     } else if(visited[i]){
       cell.classList.add('visited');
-      cell.textContent='·';
+      cell.textContent='✕';
     }
     b.appendChild(cell);
   }
@@ -1651,9 +1758,37 @@ function closeRound1Popup(){
   handlePlayer(gameState);
 }
 
+function closeRound2Popup(){
+  handlePlayer(gameState);
+}
+
 async function closeRankingPopup(){
   await update(ref(db,`cavalo/${sessionCode}`),{status:'active'});
   showScreen('lobbyScreen');
+}
+
+async function resetTeamTest(){
+  if(!confirm('Tem certeza que quer reiniciar o teste da equipe? O tabuleiro será zerado para todos.')) return;
+  // Reseta variáveis locais primeiro
+  iAmPlaying = false;
+  boardVisited = Array(25).fill(false);
+  horsePos = -1;
+  pathClicks = [];
+  // Atualiza no Firebase
+  await update(ref(db, `cavalo/${sessionCode}/teams/${myTeam}`), {
+    status: 'playing',
+    turnIdx: 0,
+    board: Array(25).fill(false),
+    horsePos: -1,
+    currentPath: [],
+    lCount: 0,
+    blocked: false,
+    fullBoard: false,
+    startTime: Date.now(),
+    endTime: null
+  });
+  // Força atualização da tela
+  if(gameState) handlePlayer(gameState);
 }
 
 async function restartTeamTest(){
@@ -1676,13 +1811,19 @@ async function restartTeamTest(){
   if(oldBtn) oldBtn.remove();
 }
 async function stopAllTeams(){
-  if(!confirm('Deseja parar o teste para TODAS as equipes?')) return;
+  // Mensagens dinâmicas baseadas na fase atual
+  const phaseLabels = { 'practice': 'o teste', 'round1': 'a Rodada 1', 'round2': 'a Rodada 2' };
+  const currentPhase = gameState?.phase || 'practice';
+  const label = phaseLabels[currentPhase] || 'a rodada';
+  
+  if(!confirm(`Deseja parar ${label} para TODAS as equipes?`)) return;
+  stopPhaseTimer();
   
   const snap = await get(ref(db, `cavalo/${sessionCode}/teams`));
   if(!snap.exists()) return;
   
   const teams = snap.val();
-  const updates = {};
+  const updates = { phaseStartTime: null };
   
   Object.keys(teams).forEach(name => {
     if(teams[name].status === 'playing') {
@@ -1692,11 +1833,13 @@ async function stopAllTeams(){
   });
   
   await update(ref(db, `cavalo/${sessionCode}`), updates);
-  toast('Teste parado com sucesso!', '#E6233A');
+  toast(`${label.charAt(0).toUpperCase() + label.slice(1)} parado com sucesso!`, '#E6233A');
 }
 window.closeTestStartPopup = closeTestStartPopup;
 window.closeRound1Popup = closeRound1Popup;
+window.closeRound2Popup = closeRound2Popup;
 window.restartTeamTest = restartTeamTest;
+window.resetTeamTest = resetTeamTest;
 window.closeRankingPopup = closeRankingPopup;
 window.stopAllTeams = stopAllTeams;
 
