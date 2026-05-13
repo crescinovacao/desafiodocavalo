@@ -375,25 +375,22 @@ select option { background:#fff; color:var(--text); }
   </div>
 
   <!-- Spectator: jogo rolando — vê o tabuleiro ao vivo -->
-  <div id="spectatorView" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:520px;">
-
-    <!-- quem está jogando agora -->
-    <div class="playing-now-banner">
-      <div class="pnb-dot" id="pnbDot" style="background:#FF5527;"></div>
-      <div style="flex:1;">
-        <div class="pnb-label">✦ Jogando agora</div>
-        <div class="pnb-name" id="pnbName">—</div>
+  <div id="spectatorView" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%;">
+    <div class="card" style="display:flex;flex-direction:column;gap:14px;align-items:center;width:100%;">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+        <div style="font-family:'Raleway',sans-serif;font-weight:800;color:var(--accent);font-size:1.1rem;" id="specTeamName">Equipe A</div>
+        <div style="font-family:'Raleway',sans-serif;font-weight:900;color:var(--text);font-size:1.1rem;"><span id="specScore">0</span> casas</div>
       </div>
-      <div class="pnb-turn" id="pnbTurnCount"></div>
+      <div style="width:100%;background:var(--surface2);border-radius:10px;padding:12px 16px;text-align:center;font-weight:700;color:var(--text);" id="specStatus">
+        <span id="pnbName">—</span> está jogando!
+      </div>
+      <div class="board-wrap" style="background:var(--surface2);border-radius:10px;padding:14px;width:100%;"><div class="board" id="spectatorBoard"></div></div>
+      <div id="nextPill" style="color:var(--muted);font-size:0.82rem;text-align:center;"></div>
     </div>
-
-    <!-- tabuleiro ao vivo (read-only) -->
-    <div class="board-wrap"><div class="board" id="spectatorBoard"></div></div>
-
-    <!-- score + quem joga depois -->
-    <div style="display:flex;gap:10px;width:100%;flex-wrap:wrap;justify-content:center;">
-      <div class="pill score-pill"><span id="specScore">0</span> Ls</div>
-      <div class="pill" id="nextPill" style="color:var(--muted);font-size:0.82rem;"></div>
+    <!-- Elementos ocultos para compatibilidade -->
+    <div style="display:none;">
+      <div id="pnbDot"></div>
+      <div id="pnbTurnCount"></div>
     </div>
   </div>
 
@@ -1159,10 +1156,12 @@ function showSpectator(t, currentPlayer, turnIdx, players){
   document.getElementById('preGameWait').style.display='none';
   document.getElementById('spectatorView').style.display='flex';
 
-  // Banner de quem joga
-  document.getElementById('pnbDot').style.background='#FF5527';
+  // Nome da equipe
+  document.getElementById('specTeamName').textContent = myTeam;
+  
+  // Status: quem está jogando
+  document.getElementById('specStatus').innerHTML = `<strong>${currentPlayer}</strong> está jogando!`;
   document.getElementById('pnbName').textContent=currentPlayer;
-  document.getElementById('pnbTurnCount').textContent=`jogada ${turnIdx+1}`;
 
   // Próximo jogador
   const nextPill=document.getElementById('nextPill');
@@ -1172,13 +1171,13 @@ function showSpectator(t, currentPlayer, turnIdx, players){
     const nextIdx=(turnIdx+1)%players.length;
     const nextPlayer=players[nextIdx];
     const isMe=nextPlayer===myName;
-    nextPill.textContent=isMe?'⚡ Você é o próximo!':`A seguir: ${nextPlayer}`;
-    nextPill.style.color=isMe?'#FF5527':'#b89dd4';
+    nextPill.textContent=isMe?'⚡ Você é o(a) próximo(a)!':`A seguir: ${nextPlayer}`;
+    nextPill.style.color=isMe?'#FF5527':'var(--muted)';
   }
 
   // Score
-  const score=(t.board||[]).filter(Boolean).length;
-  document.getElementById('specScore').textContent=t.lCount||0;
+  const casas=(t.board||[]).filter(Boolean).length;
+  document.getElementById('specScore').textContent=casas;
 
   // Tabuleiro read-only
   buildSpectatorBoard(t.board||Array(25).fill(false), t.horsePos??-1, t.currentPath||[]);
